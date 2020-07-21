@@ -2,41 +2,95 @@ import numpy as np
 import re
 import string
 import random
-from .utils import obtainText
+import matplotlib.pyplot as plt
+from .utils import obtainText, decodeMessage, createRandomSubstitution, encodeMessage
 
 
 class GeneticAlgorithm():
-    def __init__(self, url: str, filename: str, n: int):
+    def __init__(self, originalText: str, url: str, filename: str, n: int):
         self.text = obtainText(url, filename)
         self.pi = self.createInitialDist(n)
         self.matrix = self.createMatrix(n)
         self.regex = re.compile('[^a-zA-Z]')
         self.computeProbabilities(filename)
 
+        self.originalText = originalText.upper()
+        self.encodedText = self.encodeText(self.originalText)
+        print(self.encodedText)
+        # self.trueMapping = trueMapping
+
         self.dnaPool = []
         self.initRandomDNA()
+
+
+    def encodeText(self, originalMessage: str) -> str:
+        self.trueMapping = createRandomSubstitution()
+        return encodeMessage(originalMessage, self.trueMapping)
 
     def start(self, epochs: int):
         # Basic outline of the algorithms
         # epochs = 1000
         bestDNA = None
-        bestMap = None
+        self.bestMap = None
         maxScore = float('-inf')
+        letters = list(string.ascii_uppercase)
+        self.scores = np.zeros(epochs)
+        
 
         for i in range(epochs):
-            if i>0:
+            # print(f"===================EPOCH {i}=======================")
+            if i > 0:
+                # print("*******EVOLVING OFFSPRING*******************")
                 self.evolveOffspring(3)
-            
+
             # score for each dna:
             dna2Score = {}
             for dna in self.dnaPool:
-                currentMap = {}
-                fitness_new = f(new_DNA)
+                currentMap = dict(zip(letters, dna))
+                # print(currentMap)
+                decodedMessage = decodeMessage(self.encodedText, currentMap)
+                score = self.getSequenceProb(decodedMessage)
+                dna2Score[''.join(dna)] = score
+                # print("**************************")
 
             if score > maxScore:
-                bestDNA = DNA_new
-                bestMap = fitness_new
+                bestDNA = dna
+                self.bestMap = currentMap
+                maxScore = score
 
+            # Average score for n-generation:
+            self.scores[i] = np.mean(list(dna2Score.values()))
+
+            # Keep 5 fittest individuals
+            sorted_dna = sorted(dna2Score.items(), key=lambda x: x[1], reverse=True)
+            self.dnaPool = [list(k) for k, v in sorted_dna[:5]]
+
+            if i % 200 == 0:
+                print(f"iter: {i}, score: {self.scores[i]}, current max: {maxScore}")
+
+        self.plot()
+
+
+    def decypherText(self):
+        decodedMessage = decodeMessage(self.encodedText, self.bestMap)
+        print(f"Log Likelyhoodof decoded message: {self.getSequenceProb(decodedMessage)}")
+        print(f"Log Likelyhoodof original message: {self.getSequenceProb(self.originalText)}")
+
+        for key, value in self.trueMapping.items():
+            pred = self.bestMap[value]
+            if key != pred:
+                print(f"True mapping: {key}, predicted mapping: {pred}")
+        
+        print("================================================================")
+        print("Decoded message:")
+        print(decodedMessage)
+        print("----------------------------------------------------------------")
+        print("True message:")
+        print(self.originalText)
+
+    def plot(self):
+        plt.plot(self.scores)
+        plt.show()
 
     def computeProbabilities(self, filename: str):
         for line in open(filename):
@@ -83,20 +137,21 @@ class GeneticAlgorithm():
             j = ord(letter)-65
             logp += np.log(self.matrix[i, j])
             i = j
-        
+
         return logp
 
-    def getSequenceProb(self, words: list) -> np.float64:
+    def getSequenceProb(self, text: list) -> np.float64:
         logp = 0
+        words = text.split()
         for word in words:
             logp += self.getWordProb(word)
-        
-        return np.float64
+
+        return logp
 
     def initRandomDNA(self):
         for _ in range(20):
             dna = list(string.ascii_uppercase)
-            dna = random.shuffle(dna)
+            random.shuffle(dna)
             self.dnaPool.append(dna)
 
     def evolveOffspring(self, nChildren: int):
@@ -113,4 +168,4 @@ class GeneticAlgorithm():
                 newDna[j] = newDna[k]
                 newDna[k] = auxc
                 offspring.append(newDna)
-        self.dnaPool.append(offspring)
+        self.dnaPool.extend(offspring)

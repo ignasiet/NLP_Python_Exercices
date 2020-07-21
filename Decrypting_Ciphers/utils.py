@@ -67,5 +67,4 @@ def decodeMessage(text: str, cypher: dict) -> str:
         if char in cypher:
             decodedChar = cypher[char]
         decodedMsg.append(decodedChar)
-
     return ''.join(decodedMsg)

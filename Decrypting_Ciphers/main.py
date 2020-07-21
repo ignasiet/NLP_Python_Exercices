@@ -1,5 +1,5 @@
 from .genetic import GeneticAlgorithm
-from .utils import createRandomSubstitution, encodeMessage, decodeMessage,reverseDict
+from .utils import createRandomSubstitution, encodeMessage, decodeMessage, reverseDict
 
 original_message = '''I then lounged down the street and found,
 as I expected, that there was a mews in a lane which runs down
@@ -13,15 +13,15 @@ interested, but whose biographies I was compelled to listen to.
 
 
 def start():
-    cypher = createRandomSubstitution()
-    encryptedText = encodeMessage(original_message, cypher)
-    print(encryptedText)
+    
     # decypher = reverseDict(cypher)
     # decryptedText = decodeMessage(encryptedText, decypher)
     # print(decryptedText)
-    alg = GeneticAlgorithm('https://lazyprogrammer.me/course_files/moby_dick.txt', 
+    alg = GeneticAlgorithm(original_message, 'https://lazyprogrammer.me/course_files/moby_dick.txt', 
                            'moby_dick.txt',
                            26)
+    alg.start(1000)
+    alg.decypherText()
 
 
 if __name__ == "__main__":
