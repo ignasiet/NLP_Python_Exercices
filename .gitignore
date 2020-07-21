@@ -127,8 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+<<<<<<< HEAD
 
 # Exercices specific
 */.vscode/*
 moby_dick.txt
 
+=======
+>>>>>>> 571a2a2ca580dd3dbb624d6ed4bae00a77656478
